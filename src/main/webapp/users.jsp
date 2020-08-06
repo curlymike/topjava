@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <title>Users</title>
+    <base href="${pageContext.request.contextPath}/" />
 </head>
 <body>
 <h3><a href="index.html">Home</a></h3>
