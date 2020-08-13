@@ -1,18 +1,50 @@
 package ru.javawebinar.topjava.model;
 
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+@NamedQueries({
+        @NamedQuery(
+                name = Meal.UPDATE,
+                query = "UPDATE Meal m SET m = :meal WHERE m.id = :id AND m.user.id = :user_id"),
+        @NamedQuery(
+                name = Meal.BY_ID_AND_USER_ID,
+                query = "SELECT m FROM Meal m WHERE m.id=:id AND m.user.id=:user_id"),
+        @NamedQuery(
+                name = Meal.DELETE,
+                query = "DELETE FROM Meal m WHERE m.id=:id AND m.user.id=:user_id"),
+        @NamedQuery(
+                name = Meal.ALL_SORTED,
+                query = "SELECT m FROM Meal m WHERE m.user.id=:user_id ORDER BY m.dateTime DESC"),
+        @NamedQuery(
+                name = Meal.ALL_BETWEEN,
+                query = "SELECT m FROM Meal m WHERE m.user.id = :user_id AND m.dateTime >= :datetime_from AND m.dateTime < :datetime_to ORDER BY m.dateTime DESC"
+        )
+})
+@Entity
+@Table(name = "meals", uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "date_time"}, name = "meals_unique_user_datetime_idx")})
 public class Meal extends AbstractBaseEntity {
+
+    public static final String UPDATE = "Meal.save";
+    public static final String BY_ID_AND_USER_ID = "Meal.get";
+    public static final String ALL_SORTED = "Meal.getAllSorted";
+    public static final String ALL_BETWEEN = "Meal.getBetweenHalfOpen";
+    public static final String DELETE = "Meal.delete";
+
+    @NotNull
+    @Column(name ="date_time", nullable = false)
     private LocalDateTime dateTime;
 
+    @Column(name ="description", nullable = false)
     private String description;
 
+    @Column(name ="calories", nullable = false)
     private int calories;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
@@ -24,10 +56,19 @@ public class Meal extends AbstractBaseEntity {
     }
 
     public Meal(Integer id, LocalDateTime dateTime, String description, int calories) {
+        this(id, dateTime, description, calories, null);
+    }
+
+    public Meal(Integer id, LocalDateTime dateTime, String description, int calories, User user) {
         super(id);
         this.dateTime = dateTime;
         this.description = description;
         this.calories = calories;
+        this.user = user;
+    }
+
+    public Meal(Meal another) {
+        this(another.id, another.dateTime, another.description, another.calories, another.user);
     }
 
     public LocalDateTime getDateTime() {
@@ -77,6 +118,7 @@ public class Meal extends AbstractBaseEntity {
                 ", dateTime=" + dateTime +
                 ", description='" + description + '\'' +
                 ", calories=" + calories +
+                ", user=" + (user == null ? "null" : user.getId()) +
                 '}';
     }
 }
